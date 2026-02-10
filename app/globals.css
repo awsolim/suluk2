@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
+/* Brand tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fafafa;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  /* cherry red */
+  --red-600: #b11226;
+  --red-700: #8f0f1f;
+
+  /* subtle gradient stops */
+  --red-grad-1: #b11226;
+  --red-grad-2: #d21c3b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+@layer components {
+  .container {
+    @apply mx-auto max-w-3xl px-4;
+  }
+
+  .center-wrap {
+    @apply min-h-screen flex items-center justify-center px-4;
+  }
+
+  .card {
+    @apply w-full max-w-md rounded-2xl border p-6 shadow-sm;
+    border-color: var(--border);
+    background: var(--card);
+  }
+
+  .title {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  .subtitle {
+    @apply mt-2 text-sm;
+    color: var(--muted);
+  }
+
+  .label {
+    @apply text-sm font-medium;
+  }
+
+  .input {
+    @apply w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition;
+    border-color: var(--border);
+  }
+  .input:focus {
+    box-shadow: 0 0 0 4px rgba(177, 18, 38, 0.12);
+    border-color: rgba(177, 18, 38, 0.35);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition;
+  }
+
+  .btn-primary {
+    color: white;
+    background-image: linear-gradient(
+      135deg,
+      var(--red-grad-1),
+      var(--red-grad-2)
+    );
+  }
+  .btn-primary:hover {
+    filter: brightness(0.98);
+  }
+  .btn-primary:active {
+    filter: brightness(0.95);
+  }
+
+  .btn-ghost {
+    @apply border bg-white;
+    border-color: var(--border);
+  }
+  .btn-ghost:hover {
+    background: rgba(17, 24, 39, 0.03);
+  }
+
+  .link {
+    @apply underline text-sm;
+    color: var(--red-600);
+  }
+
+  .section-title {
+    @apply text-sm font-semibold;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .divider {
+    @apply my-4 h-px w-full;
+    background: var(--border);
+  }
 }

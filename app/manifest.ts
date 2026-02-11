@@ -4,11 +4,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Suluk',
     short_name: 'Suluk',
-    description: 'Suluk - Qur’an memorization program management',
+    description: 'Suluk — Qur’an memorization programs',
     start_url: '/dashboard',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#991b1b',
+    theme_color: '#b91c1c',
     icons: [
       {
         src: '/icons/icon-192.png',
@@ -21,7 +21,7 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
       {
-        src: '/icons/icon-512-maskable.png',
+        src: '/icons/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

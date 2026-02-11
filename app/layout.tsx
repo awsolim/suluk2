@@ -1,21 +1,19 @@
-import './globals.css'
 import type { Metadata } from 'next'
+import './globals.css'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Suluk',
-  description: 'Explore Islamic programs offered at your local mosque',
+  description: 'Suluk — Qur’an memorization programs',
   manifest: '/manifest.webmanifest',
-  themeColor: '#991b1b',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Suluk',
-  },
+  themeColor: '#b91c1c',
   icons: {
-    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 }
-
 
 export default function RootLayout({
   children,

@@ -1,101 +1,129 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 import { supabaseBrowser } from '../../../lib/supabase'
 
-export default function NewProgramForm({
-  mosques,
-}: {
-  mosques: Array<{ id: string; name: string; address: string | null }>
-}) {
+type Role = 'student' | 'teacher' | 'admin'
+
+type MosqueRow = {
+  id: string
+  name: string
+  address: string | null
+}
+
+type TeacherRow = {
+  id: string
+  full_name: string
+}
+
+type Props = {
+  role: Role
+  userId: string
+  mosques: MosqueRow[]
+  teachers: TeacherRow[]
+}
+
+function cleanNumber(value: string) {
+  const v = value.trim()
+  if (!v) return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+export default function NewProgramForm({ role, userId, mosques, teachers }: Props) {
   const router = useRouter()
+  const supabase = useMemo(() => supabaseBrowser(), [])
+
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [mosqueId, setMosqueId] = useState('')
+  const [price, setPrice] = useState('')
+  const [teacherId, setTeacherId] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function onSubmit(formData: FormData) {
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
     setError(null)
 
-    const name = String(formData.get('name') || '').trim()
-    const description = String(formData.get('description') || '').trim()
-    const mosqueId = String(formData.get('mosque_id') || '').trim()
-    const priceRaw = String(formData.get('price') || '').trim()
-    const file = formData.get('image') as File | null
+    if (!name.trim()) return setError('Program name is required.')
+    if (!mosqueId) return setError('Please select a mosque.')
 
-    if (!name) {
-      setError('Name is required.')
-      return
-    }
-    if (!mosqueId) {
-      setError('Mosque is required.')
-      return
-    }
+    const resolvedTeacherId = role === 'admin' ? teacherId : userId
+    if (!resolvedTeacherId) return setError('Please select a teacher.')
 
-    const price =
-      priceRaw.length > 0 && !Number.isNaN(Number(priceRaw))
-        ? Number(priceRaw)
-        : null
+    setLoading(true)
 
-    const supabase = supabaseBrowser()
-    const { data: userData, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !userData.user) {
-      setError('Not signed in.')
-      return
-    }
+    try {
+      let imagePath: string | null = null
 
-    let imagePath: string | null = null
+      if (file) {
+        const safeName = file.name.replace(/\s+/g, '-')
+        const objectPath = `thumbnails/${crypto.randomUUID()}-${safeName}`
 
-    if (file && file.size > 0) {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-      imagePath = `thumbnails/${userData.user.id}/${Date.now()}-${safeName}`
+        const upload = await supabase.storage.from('media').upload(objectPath, file, {
+          upsert: false,
+        })
 
-      const { error: uploadErr } = await supabase.storage
-        .from('media')
-        .upload(imagePath, file, { upsert: false })
-
-      if (uploadErr) {
-        setError(uploadErr.message)
-        return
+        if (upload.error) throw new Error(upload.error.message)
+        imagePath = objectPath
       }
+
+      const priceValue = cleanNumber(price)
+
+      const insert = await supabase.from('programs').insert({
+        name: name.trim(),
+        description: description.trim() || null,
+        mosque_id: mosqueId,
+        teacher_id: resolvedTeacherId,
+        image_path: imagePath,
+        price: priceValue,
+      })
+
+      if (insert.error) throw new Error(insert.error.message)
+
+      router.push('/programs')
+      router.refresh()
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create program.')
+    } finally {
+      setLoading(false)
     }
-
-    const { error: insertErr } = await supabase.from('programs').insert({
-      name,
-      description: description || null,
-      mosque_id: mosqueId,
-      teacher_id: userData.user.id,
-      image_path: imagePath,
-      price,
-    })
-
-    if (insertErr) {
-      setError(insertErr.message)
-      return
-    }
-
-    router.push('/dashboard')
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2">
-        <label className="label" htmlFor="name">
-          Program name
-        </label>
-        <input id="name" name="name" required className="input" />
+    <form onSubmit={onSubmit} className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium">Program name</label>
+        <input
+          className="mt-2 w-full rounded-xl border px-4 py-2"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Evening Hifz Program"
+        />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="label" htmlFor="description">
-          Description
-        </label>
-        <textarea id="description" name="description" className="input" rows={4} />
+      <div>
+        <label className="block text-sm font-medium">Description</label>
+        <textarea
+          className="mt-2 w-full rounded-xl border px-4 py-2"
+          rows={5}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Optional"
+        />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="label" htmlFor="mosque_id">
-          Mosque
-        </label>
-        <select id="mosque_id" name="mosque_id" required className="input">
+      <div>
+        <label className="block text-sm font-medium">Mosque</label>
+        <select
+          className="mt-2 w-full rounded-xl border px-4 py-2"
+          value={mosqueId}
+          onChange={(e) => setMosqueId(e.target.value)}
+        >
           <option value="">Select a mosque</option>
           {mosques.map((m) => (
             <option key={m.id} value={m.id}>
@@ -106,36 +134,58 @@ export default function NewProgramForm({
         </select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="label" htmlFor="price">
-          Price (optional)
-        </label>
+      {role === 'admin' && (
+        <div>
+          <label className="block text-sm font-medium">Assign teacher</label>
+          <select
+            className="mt-2 w-full rounded-xl border px-4 py-2"
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+          >
+            <option value="">Select a teacher</option>
+            {teachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.full_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium">Price (optional)</label>
         <input
-          id="price"
-          name="price"
-          type="number"
-          step="0.01"
-          min="0"
-          className="input"
+          className="mt-2 w-full rounded-xl border px-4 py-2"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
           placeholder="e.g. 50.00"
+          inputMode="decimal"
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="label" htmlFor="image">
-          Thumbnail (optional)
-        </label>
-        <input id="image" name="image" type="file" accept="image/*" />
-        <p className="text-xs muted">
-          Uploads to media/thumbnails/ and saves the path in programs.image_path
+      <div>
+        <label className="block text-sm font-medium">Thumbnail (optional)</label>
+        <input
+          className="mt-2 block w-full text-sm"
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+        <p className="mt-2 text-xs text-gray-600">
+          Uploads to <span className="font-mono">media/thumbnails/</span> and saves the path in{' '}
+          <span className="font-mono">programs.image_path</span>.
         </p>
       </div>
 
-      <button type="submit" className="btn btn-primary mt-2">
-        Create program
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-full bg-gradient-to-r from-red-700 to-red-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:from-red-800 hover:to-red-700 disabled:opacity-60"
+      >
+        {loading ? 'Creating…' : 'Create program'}
       </button>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error && <p className="text-sm text-red-700">{error}</p>}
     </form>
   )
 }

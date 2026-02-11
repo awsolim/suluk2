@@ -1,10 +1,21 @@
 import './globals.css'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Suluk',
-  description: 'A simple system for managing Qur’an memorization programs.',
+  description: 'Explore Islamic programs offered at your local mosque',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#991b1b',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Suluk',
+  },
+  icons: {
+    apple: '/icons/icon-192.png',
+  },
 }
+
 
 export default function RootLayout({
   children,

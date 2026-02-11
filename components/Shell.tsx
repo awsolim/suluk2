@@ -1,41 +1,48 @@
-import Link from "next/link";
-import ProfileMenu from "./ProfileMenu";
-import { getUser, signOut } from "../lib/auth";
-import { supabaseServer } from "../lib/supabase";
+import Link from 'next/link'
+import ProfileMenu from './ProfileMenu'
+import { getUser, signOut } from '../lib/auth'
+import { supabaseServer } from '../lib/supabase'
 
 type Props = {
-  title: string;
-  backLabel?: string;
-  backHref?: string;
-  children: React.ReactNode;
-};
+  title: string
+  backLabel?: string
+  backHref?: string
+  children: React.ReactNode
+}
 
 const btnPrimary =
-  "inline-flex items-center rounded-full bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:from-red-800 hover:to-red-700";
+  'inline-flex items-center rounded-full bg-gradient-to-r from-red-700 to-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:from-red-800 hover:to-red-700'
 
-const DEFAULT_AVATAR_PATH = "avatars/default.jpg";
+const DEFAULT_AVATAR_PATH = 'avatars/default.jpg'
 
-export default async function Shell({ title, backLabel, backHref = "/dashboard", children }: Props) {
-  const user = await getUser();
+export default async function Shell({
+  title,
+  backLabel,
+  backHref = '/dashboard',
+  children,
+}: Props) {
+  const user = await getUser()
 
-  let fullName = "";
-  let avatarUrl: string | null = null;
+  let fullName = ''
+  let avatarUrl: string | null = null
 
   if (user) {
-    const supabase = await supabaseServer();
+    const supabase = await supabaseServer()
     const { data } = await supabase
-      .from("profiles")
-      .select("full_name, image_path")
-      .eq("id", user.id)
-      .single();
+      .from('profiles')
+      .select('full_name, image_path')
+      .eq('id', user.id)
+      .single()
 
-    fullName = data?.full_name ?? "";
+    fullName = data?.full_name ?? ''
 
-    const path = (data?.image_path && data.image_path.trim() !== "") ? data.image_path : DEFAULT_AVATAR_PATH;
+    const path =
+      data?.image_path && data.image_path.trim() !== ''
+        ? data.image_path
+        : DEFAULT_AVATAR_PATH
 
-    const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
-    // Cache-bust so after save, the header updates immediately even if the filename is the same
-    avatarUrl = `${pub.publicUrl}?v=${Date.now()}`;
+    const { data: pub } = supabase.storage.from('media').getPublicUrl(path)
+    avatarUrl = `${pub.publicUrl}?v=${Date.now()}`
   }
 
   return (
@@ -53,7 +60,6 @@ export default async function Shell({ title, backLabel, backHref = "/dashboard",
 
         <div className="flex items-center gap-3">
           {user && <ProfileMenu fullName={fullName} avatarUrl={avatarUrl} />}
-
           <form action={signOut}>
             <button type="submit" className={btnPrimary}>
               Sign out
@@ -66,5 +72,5 @@ export default async function Shell({ title, backLabel, backHref = "/dashboard",
 
       {children}
     </div>
-  );
+  )
 }

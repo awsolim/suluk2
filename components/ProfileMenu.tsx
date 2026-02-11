@@ -1,28 +1,28 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 
 export default function ProfileMenu({
   fullName,
   avatarUrl,
 }: {
-  fullName: string;
-  avatarUrl?: string | null;
+  fullName: string
+  avatarUrl?: string | null
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
+      if (!ref.current) return
+      if (!ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, []);
+    document.addEventListener('click', onDocClick)
+    return () => document.removeEventListener('click', onDocClick)
+  }, [])
 
-  const hasAvatar = !!avatarUrl && avatarUrl.trim() !== "";
+  const hasAvatar = !!avatarUrl && avatarUrl.trim() !== ''
 
   return (
     <div ref={ref} className="relative">
@@ -42,8 +42,7 @@ export default function ProfileMenu({
             </svg>
           )}
         </span>
-
-        <span className="max-w-[160px] truncate">{fullName || "Profile"}</span>
+        <span className="max-w-[160px] truncate">{fullName || 'Profile'}</span>
       </button>
 
       {open && (
@@ -54,5 +53,5 @@ export default function ProfileMenu({
         </div>
       )}
     </div>
-  );
+  )
 }
